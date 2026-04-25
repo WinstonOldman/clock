@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flip Clock</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card-bg: #2a2a2a;
+      --card-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      --text: #f0f0f0;
+      --card-w: clamp(70px, 12vw, 140px);
+      --card-h: clamp(95px, 16vw, 190px);
+      --font-size: clamp(55px, 10vw, 130px);
+      --gap: clamp(6px, 1vw, 14px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    body {
+      position: relative;
+    }
+
+    .bg-photo {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-color: #1a1a1a;
+      background-image: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+      opacity: 0;
+      transition: opacity 320ms ease;
+      transform: scale(1.02);
+    }
+
+    .bg-photo.ready {
+      opacity: 1;
+    }
+
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.42) 0%,
+        rgba(0, 0, 0, 0.54) 46%,
+        rgba(0, 0, 0, 0.72) 100%
+      );
+      pointer-events: none;
+    }
+
+    main {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .clock {
+      display: flex;
+      align-items: center;
+      gap: var(--gap);
+    }
+
+    .unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .digits {
+      display: flex;
+      gap: var(--gap);
+    }
+
+    .digit {
+      position: relative;
+      width: var(--card-w);
+      height: var(--card-h);
+      border-radius: 10px;
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      overflow: hidden;
+    }
+
+    .num {
+      display: block;
+      line-height: 1;
+      color: var(--text);
+      user-select: none;
+    }
+
+    .sep {
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 700;
+      color: #888;
+      align-self: center;
+      padding-bottom: 30px;
+      user-select: none;
+    }
+
+    .label {
+      font-size: clamp(10px, 1vw, 14px);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #888;
+      user-select: none;
+    }
+
+    .control-btn {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.04);
+      color: #f3f4f6;
+      transition: all 180ms ease;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      min-height: 2.6rem;
+      min-width: 2.6rem;
+      touch-action: manipulation;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .control-btn:hover {
+      border-color: rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .control-btn:active {
+      transform: translateY(1px);
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem;
+    }
+
+    .icon-btn svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .top-controls {
+      position: absolute;
+      left: 1rem;
+      top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 20;
+    }
+
+    .bottom-controls {
+      position: absolute;
+      right: 1rem;
+      bottom: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 20;
+    }
+
+    @media (max-width: 640px) {
+      .control-btn {
+        min-height: 2.9rem;
+        min-width: 2.9rem;
+      }
+
+      .top-controls {
+        left: 0.75rem;
+        top: 0.75rem;
+      }
+
+      .bottom-controls {
+        right: 0.75rem;
+        bottom: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="bg-photo" class="bg-photo" aria-hidden="true"></div>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <main>
+    <div class="clock" aria-label="Flip Clock">
+      <div class="unit">
+        <div class="digits">
+          <div class="digit"><span class="num" id="h1">0</span></div>
+          <div class="digit"><span class="num" id="h2">0</span></div>
+        </div>
+        <div class="label">Hours</div>
+      </div>
+
+      <div class="sep">:</div>
+
+      <div class="unit">
+        <div class="digits">
+          <div class="digit"><span class="num" id="m1">0</span></div>
+          <div class="digit"><span class="num" id="m2">0</span></div>
+        </div>
+        <div class="label">Minutes</div>
+      </div>
+
+      <div class="sep">:</div>
+
+      <div class="unit">
+        <div class="digits">
+          <div class="digit"><span class="num" id="s1">0</span></div>
+          <div class="digit"><span class="num" id="s2">0</span></div>
+        </div>
+        <div class="label">Seconds</div>
+      </div>
+    </div>
+
+    <div class="top-controls">
+      <button id="bg-btn" class="control-btn">切换背景</button>
+    </div>
+
+    <div class="bottom-controls">
+      <button id="format-btn" class="control-btn">24H</button>
+      <button id="fullscreen-btn" class="control-btn icon-btn" aria-label="全屏" title="全屏">
+        <i data-lucide="maximize"></i>
+      </button>
+    </div>
+  </main>
+
+  <script>
+    let use24Hour = true;
+
+    function pad2(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function updateClock() {
+      const d = new Date();
+      let h = d.getHours();
+      if (!use24Hour) {
+        h = h % 12;
+        if (h === 0) h = 12;
+      }
+
+      const hStr = pad2(h);
+      const mStr = pad2(d.getMinutes());
+      const sStr = pad2(d.getSeconds());
+
+      document.getElementById("h1").textContent = hStr[0];
+      document.getElementById("h2").textContent = hStr[1];
+      document.getElementById("m1").textContent = mStr[0];
+      document.getElementById("m2").textContent = mStr[1];
+      document.getElementById("s1").textContent = sStr[0];
+      document.getElementById("s2").textContent = sStr[1];
+    }
+
+    const bgBtn = document.getElementById("bg-btn");
+    const bgPhoto = document.getElementById("bg-photo");
+    const formatBtn = document.getElementById("format-btn");
+    const fsBtn = document.getElementById("fullscreen-btn");
+    let bgLoading = false;
+
+    function updateFullscreenIcon() {
+      const icon = fsBtn.querySelector("i");
+      const inFullscreen = Boolean(document.fullscreenElement);
+      if (icon) {
+        icon.setAttribute("data-lucide", inFullscreen ? "minimize" : "maximize");
+      }
+      fsBtn.setAttribute("aria-label", inFullscreen ? "退出全屏" : "全屏");
+      fsBtn.title = inFullscreen ? "退出全屏" : "全屏";
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function loadRandomBackground() {
+      if (bgLoading) return;
+      bgLoading = true;
+      bgBtn.disabled = true;
+      bgBtn.textContent = "加载中...";
+      const img = new Image();
+      const url = `https://picsum.photos/1920/1080?random=${Date.now()}`;
+
+      img.onload = async () => {
+        try {
+          if (typeof img.decode === "function") {
+            await img.decode();
+          }
+          bgPhoto.style.backgroundImage = `url("${img.src}")`;
+          bgPhoto.classList.add("ready");
+          bgBtn.textContent = "切换背景";
+        } catch (err) {
+          console.error("Background decode failed:", err, "url:", img.src);
+          bgBtn.textContent = "重试";
+        } finally {
+          bgLoading = false;
+          bgBtn.disabled = false;
+        }
+      };
+
+      img.onerror = (err) => {
+        console.error("Background load failed:", err, "url:", url);
+        bgBtn.textContent = "重试";
+        bgLoading = false;
+        bgBtn.disabled = false;
+      };
+
+      img.src = url;
+    }
+
+    bgBtn.addEventListener("click", loadRandomBackground);
+
+    formatBtn.addEventListener("click", () => {
+      use24Hour = !use24Hour;
+      formatBtn.textContent = use24Hour ? "24H" : "12H";
+      updateClock();
+    });
+
+    fsBtn.addEventListener("click", async () => {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    document.addEventListener("fullscreenchange", updateFullscreenIcon);
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updateClock();
+      setInterval(updateClock, 1000);
+      if (window.lucide) lucide.createIcons();
+      updateFullscreenIcon();
+      loadRandomBackground();
+    });
+  </script>
+</body>
+</html>
