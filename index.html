@@ -1,9 +1,9 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>无聊的老钟</title>
+  <title>Flip Clock</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -243,12 +243,12 @@
     </div>
 
     <div class="top-controls">
-      <button id="bg-btn" class="control-btn">鍒囨崲鑳屾櫙</button>
+      <button id="bg-btn" class="control-btn">切换背景</button>
     </div>
 
     <div class="bottom-controls">
       <button id="format-btn" class="control-btn">24H</button>
-      <button id="fullscreen-btn" class="control-btn icon-btn" aria-label="鍏ㄥ睆" title="鍏ㄥ睆">
+      <button id="fullscreen-btn" class="control-btn icon-btn" aria-label="全屏" title="全屏">
         <i data-lucide="maximize"></i>
       </button>
     </div>
@@ -293,8 +293,8 @@
       if (icon) {
         icon.setAttribute("data-lucide", inFullscreen ? "minimize" : "maximize");
       }
-      fsBtn.setAttribute("aria-label", inFullscreen ? "閫€鍑哄叏灞? : "鍏ㄥ睆");
-      fsBtn.title = inFullscreen ? "閫€鍑哄叏灞? : "鍏ㄥ睆";
+      fsBtn.setAttribute("aria-label", inFullscreen ? "退出全屏" : "全屏");
+      fsBtn.title = inFullscreen ? "退出全屏" : "全屏";
       if (window.lucide) lucide.createIcons();
     }
 
@@ -302,7 +302,7 @@
       if (bgLoading) return;
       bgLoading = true;
       bgBtn.disabled = true;
-      bgBtn.textContent = "鍔犺浇涓?..";
+      bgBtn.textContent = "加载中...";
       const img = new Image();
       const url = `https://picsum.photos/1920/1080?random=${Date.now()}`;
 
@@ -313,10 +313,10 @@
           }
           bgPhoto.style.backgroundImage = `url("${img.src}")`;
           bgPhoto.classList.add("ready");
-          bgBtn.textContent = "鍒囨崲鑳屾櫙";
+          bgBtn.textContent = "切换背景";
         } catch (err) {
           console.error("Background decode failed:", err, "url:", img.src);
-          bgBtn.textContent = "閲嶈瘯";
+          bgBtn.textContent = "重试";
         } finally {
           bgLoading = false;
           bgBtn.disabled = false;
@@ -325,7 +325,7 @@
 
       img.onerror = (err) => {
         console.error("Background load failed:", err, "url:", url);
-        bgBtn.textContent = "閲嶈瘯";
+        bgBtn.textContent = "重试";
         bgLoading = false;
         bgBtn.disabled = false;
       };
@@ -365,4 +365,3 @@
   </script>
 </body>
 </html>
-
